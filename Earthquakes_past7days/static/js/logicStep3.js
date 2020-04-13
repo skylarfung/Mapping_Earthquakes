@@ -31,11 +31,75 @@ let map = L.map('mapid', {
 // Pass our map layers into our layers control and add the layers control to the map.
 L.control.layers(baseMaps).addTo(map);
 
+// Earthquake style
+function styleInfo(feature) {
+	return {
+	  opacity: 1,
+	  fillOpacity: 1,
+	  fillColor: "#ffae42",
+	  color: "#000000",
+	  radius: getRadius(),
+	  stroke: true,
+	  weight: 0.5
+	};
+}
+
 // Retrieve the earthquake GeoJSON data.
-d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson").then(function(data) {
-  
-// Creating a GeoJSON layer with the retrieved data.
-  L.geoJson(data).addTo(map);
+d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson").then(function(data) {
+	console.log(data);
+
+	// Gets radius of earthquake
+	function getRadius(magnitude) {		
+	if (magnitude === 0) {
+	return 1;
+	}
+	return magnitude * 4;
+	}
+
+	// Gets color based on magnitude
+	function getColor(magnitude) {
+		if (magnitude > 5) {
+		  return "#ea2c2c";
+		}
+		if (magnitude > 4) {
+		  return "#ea822c";
+		}
+		if (magnitude > 3) {
+		  return "#ee9c00";
+		}
+		if (magnitude > 2) {
+		  return "#eecc00";
+		}
+		if (magnitude > 1) {
+		  return "#d4ee00";
+		}
+		return "#98ee00";
+	}
+
+	// Earthquake style
+	function styleInfo(feature) {
+		return {
+	  	opacity: 1,
+	  	fillOpacity: 1,
+	  	fillColor: getColor(feature.properties.mag),
+	  	color: "#000000",
+	  	radius: getRadius(feature.properties.mag),
+	  	stroke: true,
+	 	weight: 0.5
+		};
+	}
+
+	// Creating a GeoJSON layer with the retrieved data.
+  	L.geoJson(data, {
+		style: styleInfo,
+		pointToLayer: function(feature, latlng) {
+			// console.log(data);
+			return L.circleMarker(latlng);
+		},
+		onEachFeature: function(feature, layer) {
+			layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place);
+		  }
+	}).addTo(map);
 });
 
 
